@@ -9,13 +9,20 @@ import json
 import urllib.request
 import urllib.error
 import sys
+from urllib.parse import urlparse
+
+from .detector import _int, is_html, is_200, indexable
 
 OLLAMA_BASE = "http://localhost:11434/api/generate"
 
+OLLAMA_CALLS_COUNT = 0
 
-def _call_ollama(prompt: str) -> str | None:
+
+def _call_ollama(prompt: str, model: str = "qwen3.5:9b") -> str | None:
     """Call Ollama and return the generated text, or None on failure."""
-    payload = json.dumps({"model": "qwen3.5:9b", "prompt": prompt, "stream": False}).encode("utf-8")
+    global OLLAMA_CALLS_COUNT
+    OLLAMA_CALLS_COUNT += 1
+    payload = json.dumps({"model": model, "prompt": prompt, "stream": False}).encode("utf-8")
     req = urllib.request.Request(OLLAMA_BASE, data=payload, headers={"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
@@ -79,7 +86,7 @@ def rewrite_titles(
             )
 
         # First attempt
-        response = _call_ollama(prompt.format(h1=h1, meta=meta, old=old, url=url))
+        response = _call_ollama(prompt.format(h1=h1, meta=meta, old=old, url=url), model=model)
         if response is None:
             return []  # Ollama not running
 
@@ -92,7 +99,7 @@ def rewrite_titles(
                 f"URL: {url}\nCurrent title: {old}\nMeta Description: {meta}\nH1: {h1}\n"
                 "Respond with ONLY the title text, nothing else."
             )
-            response = _call_ollama(strict_prompt.format(h1=h1, meta=meta, old=old, url=url))
+            response = _call_ollama(strict_prompt.format(h1=h1, meta=meta, old=old, url=url), model=model)
             if response is None:
                 return []
             new = response
@@ -158,7 +165,7 @@ def rewrite_metas(
             )
 
         # First attempt
-        response = _call_ollama(prompt)
+        response = _call_ollama(prompt, model=model)
         if response is None:
             return []  # Ollama not running
 
@@ -171,7 +178,7 @@ def rewrite_metas(
                 f"URL: {url}\nCurrent meta: {old}\nPage title: {title}\nH1: {h1}\n"
                 "Respond with ONLY the meta description text, nothing else."
             )
-            response = _call_ollama(strict_prompt)
+            response = _call_ollama(strict_prompt, model=model)
             if response is None:
                 return []
             new = response
@@ -210,7 +217,8 @@ def build_redirect_map(rows: list[dict], issues: list[dict]) -> list[dict]:
     # Add homepage if available
     homepage = None
     for url in live_urls:
-        if url.rstrip("/").endswith("/") or "/index" in url or "/home" in url:
+        parsed = urlparse(url)
+        if parsed.path in ("", "/") or "/index" in parsed.path or "/home" in parsed.path:
             homepage = url
             break
     if not homepage and live_urls:

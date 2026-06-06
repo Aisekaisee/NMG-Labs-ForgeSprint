@@ -35,6 +35,7 @@ def main():
     t0 = time.time()
     server.seo_load(args.export_dir)
     res = server.seo_detect()
+    server.seo_fix()
 
     # starter recommendations from the detected issues (the skill writes richer ones)
     issues = sorted(server.RUN["issues"], key=lambda x: {"High":0,"Medium":1,"Low":2}.get(x["severity"],3))
@@ -44,7 +45,6 @@ def main():
     if not recs:
         recs.append("No issues detected on this crawl.")
     server.seo_recommend(recs)
-    server.RUN["model_calls"] = 0  # starter does no model calls; champion fixes will add some
     server.RUN["duration_sec"] = round(time.time() - t0, 1)
     server.seo_report()
     server.seo_export()

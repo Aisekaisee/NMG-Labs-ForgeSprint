@@ -99,6 +99,12 @@ Format per entry:
 - **Revised?** 
 
 6. 
-- **Prompt:** 
-- **For:** 
+- **Prompt:** Improve `_render_html()` in `mcp/server.py` to make `outputs/report.html` genuinely client-ready:
+  - Add a professional header with site name, crawl date, and summary counts
+  - Group issues by severity (High → Medium → Low) with clear visual hierarchy
+  - Add a "Fixes" section showing the title rewrites and redirect map in tables
+  - Make recommendations specific and actionable (not generic)
+  - Add basic CSS styling that looks professional in a browser and in a forwarded email
+  - Keep it a single self-contained HTML file with inline CSS (no external dependencies)
+- **For:** Improving the html rendered output for better readability and understanding
 - **Revised?** 
