@@ -153,8 +153,7 @@ def detect(rows: list[dict]) -> list[dict]:
     # redirect_chain: a redirect whose target is itself a redirecting URL
     redirects = [r for r in rows if 300 <= _int(r.get("Status Code", 0)) <= 399]
     redirect_map = {r.get("Address", ""): r.get("Redirect URL", "") for r in redirects}
-    redirect_targets = {r.get("Redirect URL", "") for r in redirects}
-    chain_urls = [t for t in redirect_targets if t in redirect_map]
+    chain_urls = [addr for addr, target in redirect_map.items() if target in redirect_map]
     add("redirect_chain", "High", chain_urls, "Redirects that lead to other redirects (redirect chains).")
 
     return issues
@@ -167,6 +166,12 @@ def summarize(issues: list[dict]) -> dict:
     return {"total_issues": len(issues),
             "by_severity": {"High": by_sev["High"], "Medium": by_sev["Medium"], "Low": by_sev["Low"]}}
 
+def summarize(issues: list[dict]) -> dict:
+    by_sev = defaultdict(int)
+    for i in issues:
+        by_sev[i["severity"]] += i["count"]
+    return {"total_issues": sum(i["count"] for i in issues),
+            "by_severity": {"High": by_sev["High"], "Medium": by_sev["Medium"], "Low": by_sev["Low"]}}
 
 if __name__ == "__main__":
     import sys, json
