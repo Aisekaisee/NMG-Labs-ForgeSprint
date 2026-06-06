@@ -107,4 +107,6 @@ Format per entry:
   - Add basic CSS styling that looks professional in a browser and in a forwarded email
   - Keep it a single self-contained HTML file with inline CSS (no external dependencies)
 - **For:** Improving the html rendered output for better readability and understanding
-- **Revised?** 
+- **Revised?** Yes had to remove this as the output was desired.
+
+

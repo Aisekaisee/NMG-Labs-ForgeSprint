@@ -28,6 +28,6 @@ Format:
 
 - `[2:00]` <Add fixing logic in server.py or new file> Decided to make a new file named fix_writer.py for better debugging and code modularity.
 
-- `[2:30]` <The redirect_chain detector flagged the wrong URLs.> 
+- `[2:30]` <The redirect_chain detector flagged the wrong URLs> Modified detector.py to flag the initiating redirect address (addr) instead of the redirect target/intermediary (target).
 
-- `[]` 
+- `[4:00]` <Integrated Champion fixers into the headless runner and server> Wired the titles, metas, and redirect map fixers in, corrected homepage detection using urlparse, and tracked actual Ollama calls dynamically.
