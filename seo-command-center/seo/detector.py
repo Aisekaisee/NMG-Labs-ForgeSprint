@@ -90,12 +90,72 @@ def detect(rows: list[dict]) -> list[dict]:
         "Indexable pages with zero internal links in.")
 
     # ----------------------------------------------------------------------- #
-    # TODO (Sprint): add the rest of the rulebook for full accuracy:
-    #   title_too_short, missing_meta_description, duplicate_meta_description,
-    #   meta_description_too_long, missing_h1, duplicate_h1, redirect_chain,
-    #   thin_content, non_indexable_but_linked, slow_page
-    # Each is a short rule over the columns — see rulebook.md.
+    # Title length checks (indexable 200 pages)
+    add("title_too_short", "Low",
+        [r["Address"] for r in idx200
+         if 0 < _int(r.get("Title 1 Length", 0)) < 30],
+        "Titles with less than 30 characters.")
+
     # ----------------------------------------------------------------------- #
+    # Meta description checks (indexable 200 pages)
+    add("missing_meta_description", "Medium",
+        [r["Address"] for r in idx200 if not (r.get("Meta Description 1", "") or "").strip()],
+        "Indexable pages with no meta description tag.")
+
+    # duplicate meta descriptions (ignore empty values)
+    by_meta_desc = defaultdict(list)
+    for r in idx200:
+        md = (r.get("Meta Description 1", "") or "").strip()
+        if md:
+            by_meta_desc[md].append(r["Address"])
+    dup_md = [u for urls in by_meta_desc.values() if len(urls) > 1 for u in urls]
+    add("duplicate_meta_description", "Medium", dup_md, "Pages sharing an identical meta description.")
+
+    add("meta_description_too_long", "Low",
+        [r["Address"] for r in idx200
+         if _int(r.get("Meta Description 1 Length", 0)) > 155],
+        "Meta descriptions likely truncated in search results.")
+
+    # ----------------------------------------------------------------------- #
+    # H1 checks (all 200 HTML pages, not just indexable)
+    h1_200 = [r for r in rows if is_html(r) and is_200(r)]
+    add("missing_h1", "Medium",
+        [r["Address"] for r in h1_200 if not (r.get("H1-1", "") or "").strip()],
+        "200 pages with no H1 heading.")
+
+    # ----------------------------------------------------------------------- #
+    # Duplicate H1 checks (indexable 200 pages)
+    by_h1 = defaultdict(list)
+    for r in idx200:
+        h1 = (r.get("H1-1", "") or "").strip()
+        if h1:
+            by_h1[h1].append(r["Address"])
+    dup_h1 = [u for urls in by_h1.values() if len(urls) > 1 for u in urls]
+    add("duplicate_h1", "Low", dup_h1, "Pages sharing an identical H1 heading.")
+
+    # ----------------------------------------------------------------------- #
+    # Response time and content checks
+    add("slow_page", "Low",
+        [r["Address"] for r in rows if _float(r.get("Response Time", 0)) > 1.0],
+        "Pages taking longer than 1 second to load.")
+
+    add("thin_content", "Low",
+        [r["Address"] for r in idx200 if _int(r.get("Word Count", 0)) < 200],
+        "Pages with less than 200 words of content.")
+
+    add("non_indexable_but_linked", "Medium",
+        [r["Address"] for r in rows
+         if "Non-Indexable" in (r.get("Indexability", "") or "").strip()
+         and _int(r.get("Inlinks", 0)) > 0],
+        "Non-indexable pages that have internal links pointing to them.")
+
+    # ----------------------------------------------------------------------- #
+    # redirect_chain: a redirect whose target is itself a redirecting URL
+    redirects = [r for r in rows if 300 <= _int(r.get("Status Code", 0)) <= 399]
+    redirect_map = {r.get("Address", ""): r.get("Redirect URL", "") for r in redirects}
+    redirect_targets = {r.get("Redirect URL", "") for r in redirects}
+    chain_urls = [t for t in redirect_targets if t in redirect_map]
+    add("redirect_chain", "High", chain_urls, "Redirects that lead to other redirects (redirect chains).")
 
     return issues
 
