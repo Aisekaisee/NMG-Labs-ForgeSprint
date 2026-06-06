@@ -52,12 +52,53 @@ Format per entry:
 - **Revised?** NO
 
 3. 
-- **Prompt:** 
+- **Prompt:** ❯ Create `seo/fix_rewriter.py` with a function `rewrite_titles(rows, issues, model="qwen3.5:9b")` that:
+  1. Finds all pages flagged with `missing_title`, `title_too_long`, or `title_too_short` in the `issues` list
+  2. For each page, calls Ollama at `http://localhost:11434/api/generate` via `urllib.request`:
+     - JSON body: `{"model": model, "prompt": "Write a concise SEO title for a page at URL: {url}\nCurrent title: {old_title}\nH1: {h1}\nRespond with ONLY the title text, nothing
+  else.\nMax 60 characters."}`
+  3. Validates the response length in Python:
+     - If `len(response.strip()) > 60`, re-ask once with a stricter prompt: "Shorter title (max 60 chars):"
+     - If still over 60 after retry, truncate to 60 chars
+  4. Returns a list: `[{"url": "...", "old": "...", "new": "..."}]`
+  5. If Ollama is not running (connection refused), return an empty list so the pipeline doesn't crash
+  Use only standard library (`urllib.request`, `json`). Add a `__main__` block that tests it on the first 3 broken titles from `../sample-export`.
+- **For:** Fixing the missing_title, title_too_long, or title_too_short in the fix_writer.py
+- **Revised?** NO
+
+4. 
+- **Prompt:**  Extend `seo/fix_rewriter.py` with two more functions:
+  1. `rewrite_metas(rows, issues, model="qwen3.5:9b")`:
+     - Finds pages flagged with `missing_meta_description` or `meta_description_too_long`
+     - Same Ollama pattern as titles, but prompt asks for meta description (max 155 chars)
+     - Validate `len(response.strip()) <= 155`, retry once if over, truncate if still over
+     - Returns `[{"url": "...", "old": "...", "new": "..."}]`
+  2. `build_redirect_map(rows, issues)` — no model needed, pure Python:
+     - Finds all URLs flagged as `broken_link` (4xx)
+     - Builds a list of all live (200, indexable) URLs
+     - For each broken URL, find the closest live URL by common path prefix (split by `/`, count matching segments). If no match, pick the homepage.
+     - Returns `[{"from": "...", "to": "...", "reason": "404 -> closest live page"}]`
+  Keep the existing `rewrite_titles` function unchanged. Add a `__main__` block that tests meta rewrites on 2 pages and prints the redirect map for broken links.
 - **For:** 
 - **Revised?** 
 
+5. 
+- **Prompt:**  Wire the fixer into the pipeline. Make these minimal edits:
+  1. In `mcp/server.py`:
+     - Import the new functions from `seo.fix_rewriter`
+     - Add `seo_fix()` function that calls `rewrite_titles()`, `rewrite_metas()`, and `build_redirect_map()` using `RUN["rows"]` and `RUN["issues"]`
+     - Store results in `RUN["fixes"] = {"titles": [...], "redirect_map": [...]}`
+     - Update `RUN["model_calls"]` to count actual Ollama calls made
+     - Emit `_emit("fixes", RUN["fixes"])` for the dashboard
+  2. In `run.py`:
+     - After `server.seo_detect()`, call `server.seo_fix()` before `server.seo_recommend()`
+     - Remove the hardcoded `RUN["model_calls"] = 0` — let the fixer set it
+  3. Run end-to-end: `python run.py sample-export/`
+  4. Check `outputs/report.json` has a non-empty `fixes` block
+- **For:** Added the fix_writer.py in the mcp/server.py
+- **Revised?** 
 
-4. 
+6. 
 - **Prompt:** 
 - **For:** 
 - **Revised?** 

@@ -24,6 +24,7 @@ MODEL = os.environ.get("RADAR_MODEL", "qwen3.5:9b")
 import sys
 sys.path.insert(0, ROOT)
 from seo import detector  # noqa: E402
+from seo import fix_rewriter  # noqa: E402
 
 RUN = {"site": None, "urls": 0, "issues": [], "summary": None, "status": "idle"}
 _subs: list[queue.Queue] = []

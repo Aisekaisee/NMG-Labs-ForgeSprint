@@ -26,8 +26,8 @@ Format:
 
 - `[1:30]` <Figured out qwen3.5-9b taking a lot of time for solving issues> Decided to give a very detailed on point explaining everything hence reducing it's thinking time.
 
-- `[2:30]` <Add fixing logic in server.py or new file> Decided to make a new file named fix_writer.py for better debugging and code modularity.
+- `[2:00]` <Add fixing logic in server.py or new file> Decided to make a new file named fix_writer.py for better debugging and code modularity.
 
-- `[]` 
+- `[2:30]` <The redirect_chain detector flagged the wrong URLs.> 
 
 - `[]` 
