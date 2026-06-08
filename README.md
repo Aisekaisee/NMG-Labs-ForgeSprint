@@ -1,5 +1,17 @@
 # SEO Command Center — Forge Sprint 01
 
+<a href="https://labs.nmgdigital.com/">
+  <img src="https://labs.nmgdigital.com/assets/logos/forge-hex.svg"
+       title="Forge-NMG-Labs-Hackathon"
+       alt="Forge-NMG-Labs-Hackathon"
+       width="200"
+       height="200"/>
+</a>
+
+<p style="font-size: 11px; color: #777777; margin-top: 5px; font-family: sans-serif;">
+  Presented by <a href="https://nmgdigital.com/" style="color: #777777; text-decoration: underline;">NMG Digital</a>
+</p>
+
 A comprehensive local SEO audit and automated fixing workspace. This project ingests Screaming Frog website crawl exports (such as `internal_all.csv`), automatically detects critical SEO issues based on a strict rulebook, uses a local LLM (via Ollama) to recommend intelligent metadata rewrites and redirect maps, and provides a beautiful local dashboard + client-ready reports.
 
 ---
